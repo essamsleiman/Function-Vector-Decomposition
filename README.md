@@ -2,6 +2,28 @@
 
 This repository contains data and code for the paper: LLM Generalization with Function Vector Decomposition.
 
+## Abstract
+Function vectors (FV) are quantitative represen-
+tations of in-context learning demonstrations
+and can be added to language models to en-
+courage a particular behavior. Recent work
+has demonstrated the ability to apply semantic
+vector arithmetic to function vectors to induce
+semantic functional behavior. In this paper, we
+explore if a FV can be decomposed into se-
+mantically sound counterparts by exploring if
+FV vector arithmetic can be utilized to mitigate
+out-of-distribution bias. We evaluate the effec-
+tiveness of FV decomposition through an over-
+arching experiment of subtracting or adding
+distribution-related components and evaluating
+the corresponding out-of-distribution (OOD)
+performance. Our results indicate FV can,
+to some extent, be decomposed into task and
+distribution-related components and we show
+this through our OOD generalization experi-
+ment.
+
 ## Setup
 
 To setup, follow the description in the README_og.md file
