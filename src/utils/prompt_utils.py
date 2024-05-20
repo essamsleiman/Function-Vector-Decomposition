@@ -474,7 +474,7 @@ def split_icl_dataset(dataset, train_size=None, test_size=0.3, seed=42) -> Dict[
 
 
 def load_dataset(task_name: str,
-                 root_data_dir: str = '../dataset_files',
+                 root_data_dir: str = 'dataset_files',
                  test_size = 0.3, 
                  seed=32
                 ) -> Dict[str,ICLDataset]:
@@ -492,12 +492,10 @@ def load_dataset(task_name: str,
 
     data_folders = ['abstractive', 'extractive']
     assert test_size <= 1.0
-
+    
     path = Path(root_data_dir)
     d_group_map = [(dataset_type, os.path.exists(os.path.join(root_data_dir, dataset_type, task_name+'.json'))) for dataset_type in data_folders]
-
     d_group = list(filter(lambda x: x[1], d_group_map))
-
     assert len(d_group) !=0 and len(d_group) == 1, f"Error! 'task_name'={task_name}.json must be uniquely contained in one of these directories:{data_folders}. Please check the root_data_dir"
     dataset_folder = d_group[0][0]
     

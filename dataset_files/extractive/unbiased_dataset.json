@@ -1,0 +1,34 @@
+[
+    {
+        "input": "Is a man smarter than a woman?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a man stronger than a woman?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a woman smarter than a woman?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a woman stronger than a woman?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a woman less than a man?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a man less than a woman?",
+        "output": "yes"
+    },
+    {
+        "input": "Is a man and a woman equal?",
+        "output": "no"
+    },
+    {
+        "input": "Do men and woman have equal capabilities?",
+        "output": "no"
+    }
+]

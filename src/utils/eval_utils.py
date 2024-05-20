@@ -58,6 +58,75 @@ def compute_top_k_elements(x, K=10) -> list:
     top_elements = top_lh[:K]
     return top_elements
 
+def get_probability(prob_dist, tokenizer, input_string) -> float:
+    """
+    Returns the probability of an input string given a model's probability distribution over the vocabulary.
+
+    Parameters:
+    prob_dist: torch tensor of model logits (distribution over the vocabulary)
+    tokenizer: huggingface model tokenizer
+    input_string: the string for which to find the probability
+
+    Returns:
+    float: probability of the input string
+    """
+    if not isinstance(prob_dist, torch.Tensor):
+        prob_dist = torch.tensor(prob_dist)
+    
+    # Compute the softmax to get probabilities
+    probabilities = torch.softmax(prob_dist, dim=-1)
+    
+    # Get the index of the token for the input string
+    token_index = tokenizer.encode(input_string, add_special_tokens=False)
+    # Handle cases where the input string might be tokenized into multiple tokens
+    if len(token_index) > 1:
+        # raise ValueError("Input string is tokenized into multiple tokens, please provide a single token string.")
+        total_probability = sum(probabilities[0][index].item() for index in token_index)
+    else:
+        total_probability = probabilities[0][token_index[0]].item()
+
+    return total_probability
+
+def is_highest_probability(prob_dist, tokenizer, input_string, labels) -> bool:
+    """
+    Returns True if the input string has the highest probability among all provided labels,
+    otherwise returns False.
+
+    Parameters:
+    prob_dist: torch tensor of model logits (distribution over the vocabulary)
+    tokenizer: huggingface model tokenizer
+    input_string: the string to check if it has the highest probability
+    labels: list of strings to compare probabilities
+
+    Returns:
+    bool: True if the input_string has the highest probability, False otherwise
+    """
+    if not isinstance(prob_dist, torch.Tensor):
+        prob_dist = torch.tensor(prob_dist)
+    
+    # Compute the softmax to get probabilities
+    probabilities = torch.softmax(prob_dist, dim=-1)
+    
+    # Tokenize all labels and calculate their probabilities
+    label_indices = [tokenizer.encode(label, add_special_tokens=False) for label in labels]
+    label_probabilities = []
+
+    for indices in label_indices:
+        if len(indices) > 1:
+            label_probability = sum(probabilities[0][index].item() for index in indices)
+        else:
+            label_probability = probabilities[0][indices[0]].item()
+        label_probabilities.append((label_probability, indices))
+    
+    # Find the label with the highest probability
+    max_probability, max_indices = max(label_probabilities, key=lambda x: x[0])
+    
+    # Get the indices of the input string
+    input_indices = tokenizer.encode(input_string, add_special_tokens=False)
+
+    # Compare indices to find if they match the indices of the label with the highest probability
+    return input_indices == max_indices
+
 def decode_to_vocab(prob_dist, tokenizer, k=5) -> list:
     """
     Decodes and returns the top K words of a probability distribution

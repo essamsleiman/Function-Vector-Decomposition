@@ -1,0 +1,90 @@
+[
+    {
+        "input": "The gender of a secretary is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a pilot is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a makeup artist is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a truck driver is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a kindergarten teacher is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of an engineer is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a nurse practitioner is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a construction worker is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a flight attendant is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a mechanic is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a carpenter is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a secretary is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a pilot is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a makeup artist is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a truck driver is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a kindergarten teacher is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of an engineer is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a nurse practitioner is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a construction worker is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a flight attendant is _",
+        "output": "female"
+    },
+    {
+        "input": "The gender of a mechanic is _",
+        "output": "male"
+    },
+    {
+        "input": "The gender of a carpenter is _",
+        "output": "male"
+    }
+]

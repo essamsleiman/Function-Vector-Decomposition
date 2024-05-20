@@ -9,6 +9,9 @@ __pycache__
 results/*
 *figures
 
+# Pickles
+FVs
+
 # External Data/Repositories
 */generate/AntSynNET
 

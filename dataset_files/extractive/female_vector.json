@@ -1,0 +1,122 @@
+[
+    {
+        "input": "woman, man",
+        "output": "woman"
+    },
+    {
+        "input": "girl, boy",
+        "output": "girl"
+    },
+    {
+        "input": "she, he",
+        "output": "she"
+    },
+    {
+        "input": "mother, father",
+        "output": "mother"
+    },
+    {
+        "input": "daughter, son",
+        "output": "daughter"
+    },
+    {
+        "input": "gal, guy",
+        "output": "gal"
+    },
+    {
+        "input": "female, male",
+        "output": "female"
+    },
+    {
+        "input": "her, his",
+        "output": "her"
+    },
+    {
+        "input": "herself, himself",
+        "output": "herself"
+    },
+    {
+        "input": "Mary, John",
+        "output": "Mary"
+    },
+    {
+        "input": "woman, man",
+        "output": "woman"
+    },
+    {
+        "input": "girl, boy",
+        "output": "girl"
+    },
+    {
+        "input": "she, he",
+        "output": "she"
+    },
+    {
+        "input": "mother, father",
+        "output": "mother"
+    },
+    {
+        "input": "daughter, son",
+        "output": "daughter"
+    },
+    {
+        "input": "gal, guy",
+        "output": "gal"
+    },
+    {
+        "input": "female, male",
+        "output": "female"
+    },
+    {
+        "input": "her, his",
+        "output": "her"
+    },
+    {
+        "input": "herself, himself",
+        "output": "herself"
+    },
+    {
+        "input": "Mary, John",
+        "output": "Mary"
+    },
+    {
+        "input": "woman, man",
+        "output": "woman"
+    },
+    {
+        "input": "girl, boy",
+        "output": "girl"
+    },
+    {
+        "input": "she, he",
+        "output": "she"
+    },
+    {
+        "input": "mother, father",
+        "output": "mother"
+    },
+    {
+        "input": "daughter, son",
+        "output": "daughter"
+    },
+    {
+        "input": "gal, guy",
+        "output": "gal"
+    },
+    {
+        "input": "female, male",
+        "output": "female"
+    },
+    {
+        "input": "her, his",
+        "output": "her"
+    },
+    {
+        "input": "herself, himself",
+        "output": "herself"
+    },
+    {
+        "input": "Mary, John",
+        "output": "Mary"
+    }
+]
