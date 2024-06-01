@@ -4,7 +4,7 @@ from transformers import pipeline
 from numpy.linalg import norm
 import random
 import pickle
-
+from tqdm import tqdm
 random.seed(10)
 
 import os, re, json
@@ -18,27 +18,59 @@ from src.utils.extract_utils import get_mean_head_activations, compute_universal
 from src.utils.intervention_utils import fv_intervention_natural_text, function_vector_intervention
 from src.utils.model_utils import load_gpt_model_and_tokenizer
 from src.utils.prompt_utils import load_dataset, word_pairs_to_prompt_data, create_prompt
-from src.utils.eval_utils import decode_to_vocab, sentence_eval, get_probability, is_highest_probability
-from utils import compute_and_cache_FV, get_bias, get_score, avg
-# model_name = 'gpt2-xl'
-model_name = 'meta-llama/llama-2-7b-hf'
+from src.utils.eval_utils import decode_to_vocab, sentence_eval, get_probability, is_highest_probability, is_highest_probability_and_sorted_indices
+from utils import compute_and_cache_FV, get_bias, get_score, avg, find_orthogonal_vector
+import sys
+import sys
+import argparse
+import json
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--cfg', default='default.cfg', help='Configuration file')
+args = parser.parse_args()
+
+print("args: ", args)
+print("args.cfg: ", args.cfg)
+# Convert args.cfg from json string to dictionary
+config = json.loads(args.cfg)
+
+model_name = config['model']['name']
 model, tokenizer, model_config = load_gpt_model_and_tokenizer(model_name)
 
 profession_labels = ['accountant', 'architect', 'attorney', 'chiropractor', 'comedian', 'composer', 'dentist', 'dietitian', 'dj', 'filmmaker', 'interior_designer', 'journalist', 'model', 'nurse', 'painter', 'paralegal', 'pastor', 'personal_trainer', 'photographer', 'physician', 'poet', 'professor', 'psychologist', 'rapper', 'software_engineer', 'surgeon', 'teacher', 'yoga_teacher']
 
 # Load Datasets
-dataset = load_dataset('professor_teacher', seed=0)
-female_dataset = load_dataset('female_vector', seed=0)
-male_dataset = load_dataset('male_vector', seed=0)
+
+fv_dataset = config['dataset']['fv_dataset']
+fv_intervention_datasets = config['dataset']['fv_intervention_dataset']
+intervention_datasets = []
+
+for dataset_name in fv_intervention_datasets:
+    dataset = load_dataset(dataset_name, seed=0)
+    intervention_datasets.append(dataset)
+
 profession_dataset = load_dataset('profession_prediction_1', seed=0)
 
 # Build Function Vectors from datasets
-FV, top_heads = compute_and_cache_FV(dataset, model, model_config, tokenizer, cache_filename='FV.pkl')
-FV_female, top_heads_female = compute_and_cache_FV(female_dataset, model, model_config, tokenizer, cache_filename='FV_female.pkl')
-FV_male, top_heads_male = compute_and_cache_FV(male_dataset, model, model_config, tokenizer, cache_filename='FV_male.pkl')
-FV_profession, top_heads_profession = compute_and_cache_FV(profession_dataset, model, model_config, tokenizer, cache_filename='FV_profession.pkl')
+FV, top_heads = compute_and_cache_FV(dataset, model, model_config, tokenizer, cache_filename='FVs/FV.pkl')
+
+FV_intervention_list = []
+top_heads_intervention_list = []
+for dataset in intervention_datasets:
+    FV_intervention, top_heads_intervention = compute_and_cache_FV(dataset, model, model_config, tokenizer, cache_filename='FVs/FV_intervention.pkl')
+    FV_intervention_list.append(FV_intervention)
+    top_heads_intervention_list.append(top_heads_intervention)
+    
+FV_female, top_heads_female = compute_and_cache_FV(female_dataset, model, model_config, tokenizer, cache_filename='FVs/FV_female.pkl')
+FV_male, top_heads_male = compute_and_cache_FV(male_dataset, model, model_config, tokenizer, cache_filename='FVs/FV_male.pkl')
+FV_profession, top_heads_profession = compute_and_cache_FV(profession_dataset, model, model_config, tokenizer, cache_filename='FVs/FV_profession.pkl')
+
+# FV_orthogonal = find_orthogonal_vector(FV_male, FV_female)
 
 
+# print("FV_orthogonal: ", FV_orthogonal)
+# FV  = torch.randn(FV.size()).to(FV_female.device)
+# FV = FV_random
 total_prob_gender_zero_shot_bias_male = []
 total_prob_gender_zero_shot_bias_female = []
 total_prob_gender_icl_bias_male = []
@@ -59,14 +91,15 @@ total_prob_gender_zero_shot_plus_fvunb_profession = []
 
 total_prob_gender_fv_plus_fvunb_profession_classify = []
 total_prob_gender_zero_shot_plus_fvunb_profession_classify=[]
-
+total_prob_gender_zero_shot_plus_fvunb_profession_classify_all = {}
+total_prob_gender_fv_plus_fvunb_profession_classify_all = {}
 for n_top_heads in range(10,11):
 
     # Sample ICL example pairs, and a test word
     word_pairs = dataset['train'][:10]
     word_pairs_profession = profession_dataset['train'][:10]
     
-    for test_pair_idx in range(15, 100):
+    for test_pair_idx in tqdm(range(15, 100)):
         
         # test-set
         test_pair = dataset['test'][test_pair_idx]
@@ -100,6 +133,7 @@ for n_top_heads in range(10,11):
             _, interv_logits_fvunb = function_vector_intervention(sentence, [test_pair['output']], i, 1 * (FV_female - FV_male) , model, model_config, tokenizer)
             _, interv_logits_both_plus_profession = function_vector_intervention(zeroshot_sentence_profession, [test_profession['output']], i, FV+ 1 * (FV_female - FV_male), model, model_config, tokenizer)
             
+            
             # Get token probability of output strings "male" and "female" after intervention
             prob_gender_zero_shot = [get_probability(zero_shot_logits, tokenizer, "male"),  get_probability(zero_shot_logits, tokenizer, "female")]
             prob_gender_icl = [get_probability(clean_logits, tokenizer, "male"),  get_probability(clean_logits, tokenizer, "female")]
@@ -132,14 +166,39 @@ for n_top_heads in range(10,11):
             
             prob_gender_zero_shot_profession = get_probability(zero_shot_logits_profession, tokenizer, profession_word)
             prob_gender_fv_plus_fvunb_profession = get_probability(interv_logits_both_plus_profession, tokenizer, profession_word)
-            prob_gender_zero_shot_profession_classify = is_highest_probability(zero_shot_logits_profession, tokenizer, profession_word, profession_labels)
-            prob_gender_fv_plus_fvunb_profession_classify = is_highest_probability(interv_logits_both_plus_profession, tokenizer, profession_word, profession_labels)
+            prob_gender_zero_shot_profession_classify, prob_gender_zero_shot_profession_classify_all = is_highest_probability_and_sorted_indices(zero_shot_logits_profession, tokenizer, profession_word, profession_labels)
+            prob_gender_fv_plus_fvunb_profession_classify, prob_gender_fv_plus_fvunb_profession_classify_all = is_highest_probability_and_sorted_indices(interv_logits_both_plus_profession, tokenizer, profession_word, profession_labels)
+            # prob_gender_zero_shot_profession_classify = is_highest_probability(zero_shot_logits_profession, tokenizer, profession_word, profession_labels)
+            # prob_gender_fv_plus_fvunb_profession_classify = is_highest_probability(interv_logits_both_plus_profession, tokenizer, profession_word, profession_labels)
             
             # accumulate probability and classification performance of profession prediction
             total_prob_gender_zero_shot_plus_fvunb_profession.append(prob_gender_zero_shot_profession)
             total_prob_gender_fv_plus_fvunb_profession.append(prob_gender_fv_plus_fvunb_profession)
             total_prob_gender_zero_shot_plus_fvunb_profession_classify.append(prob_gender_zero_shot_profession_classify)
             total_prob_gender_fv_plus_fvunb_profession_classify.append(prob_gender_fv_plus_fvunb_profession_classify)
+            
+            for label, probability in prob_gender_zero_shot_profession_classify_all:
+                if label not in total_prob_gender_zero_shot_plus_fvunb_profession_classify_all:
+                    total_prob_gender_zero_shot_plus_fvunb_profession_classify_all[label] = []
+                total_prob_gender_zero_shot_plus_fvunb_profession_classify_all[label].append(probability)
+
+            for label, probability in prob_gender_fv_plus_fvunb_profession_classify_all:
+                if label not in total_prob_gender_fv_plus_fvunb_profession_classify_all:
+                    total_prob_gender_fv_plus_fvunb_profession_classify_all[label] = []
+                total_prob_gender_fv_plus_fvunb_profession_classify_all[label].append(probability)
+                
+    total_prob_gender_zero_shot_plus_fvunb_profession_classify_all_labels = {}
+    for label, probs in total_prob_gender_zero_shot_plus_fvunb_profession_classify_all.items():
+        total_prob_gender_zero_shot_plus_fvunb_profession_classify_all[label] = sum(probs) / len(probs)
+        # label_name = profession_labels[label]
+        # total_prob_gender_zero_shot_plus_fvunb_profession_classify_all_labels[label_name] = sum(probs) / len(probs)
+
+    total_prob_gender_fv_plus_fvunb_profession_classify_all_labels = {}
+    for label, probs in total_prob_gender_fv_plus_fvunb_profession_classify_all.items():
+        # label_name = profession_labels[label]
+        total_prob_gender_fv_plus_fvunb_profession_classify_all[label] = sum(probs) / len(probs)
+        # total_prob_gender_fv_plus_fvunb_profession_classify_all_labels[label_name] = sum(probs) / len(probs)
+
             
     # Gender Bias Calculation
     print("total_prob_gender_zero_shot_bias_male: ", avg(total_prob_gender_zero_shot_bias_male) * 100)
@@ -155,4 +214,7 @@ for n_top_heads in range(10,11):
     print("total_prob_gender_fv_plus_fvunb_profession: ", avg(total_prob_gender_fv_plus_fvunb_profession) * 100)
     print("total_prob_gender_zero_shot_plus_fvunb_profession_classify: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100)
     print("total_prob_gender_fv_plus_fvunb_profession_classify: ", avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100)
+    
+    print("total_prob_gender_zero_shot_plus_fvunb_profession_classify_all: ", total_prob_gender_zero_shot_plus_fvunb_profession_classify_all)
+    print("total_prob_gender_fv_plus_fvunb_profession_classify_all: ", total_prob_gender_fv_plus_fvunb_profession_classify_all)
     

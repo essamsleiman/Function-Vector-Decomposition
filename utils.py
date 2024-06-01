@@ -1,7 +1,7 @@
 import pickle
 from src.utils.extract_utils import get_mean_head_activations, compute_universal_function_vector
 import os, re, json
-
+import torch
 
 def save_to_cache(data, filename):
     with open(filename, 'wb') as f:
@@ -64,3 +64,39 @@ def get_score(score, test_sample):
     top_5_accuracy = sum(top5) / len(top5)
     top_10_accuracy = sum(top10) / len(top10)
     return top_1_accuracy, top_5_accuracy, top_10_accuracy
+
+
+
+
+def find_orthogonal_vector(v1, v2):
+    # Ensure vectors are in float format for precision
+    v1, v2 = v1.squeeze(), v2.squeeze()
+    print("v1: ", v1)
+    print("v2: ", v2)
+    print("v1.size(): ", v1.size())
+    print("v2.size(): ", v2.size())
+    v1 = v1.float()
+    v2 = v2.float()
+
+    # Normalize v1 to avoid growing the values too large in dot products
+    v1 = v1 / torch.norm(v1)
+
+    # Project v2 onto v1 and subtract to get part of v2 orthogonal to v1
+    projection_v2_on_v1 = torch.dot(v2, v1) * v1
+    v2_orthogonal_to_v1 = v2 - projection_v2_on_v1
+
+    # Normalize the second vector after making it orthogonal to the first
+    v2_orthogonal_to_v1 = v2_orthogonal_to_v1 / torch.norm(v2_orthogonal_to_v1)
+
+    # Generate a random vector
+    random_vector = torch.randn_like(v1)
+
+    # Make the random vector orthogonal to both v1 and the adjusted v2
+    projection_random_on_v1 = torch.dot(random_vector, v1) * v1
+    projection_random_on_v2 = torch.dot(random_vector, v2_orthogonal_to_v1) * v2_orthogonal_to_v1
+    orthogonal_vector = random_vector - projection_random_on_v1 - projection_random_on_v2
+
+    # Normalize the final orthogonal vector
+    orthogonal_vector = orthogonal_vector / torch.norm(orthogonal_vector)
+
+    return orthogonal_vector

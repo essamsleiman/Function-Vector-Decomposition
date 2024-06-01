@@ -1,0 +1,4 @@
+main:
+  model: meta-llama/llama-2-7b-hf
+  user: omry
+  pass: secret

@@ -126,6 +126,56 @@ def is_highest_probability(prob_dist, tokenizer, input_string, labels) -> bool:
 
     # Compare indices to find if they match the indices of the label with the highest probability
     return input_indices == max_indices
+def is_highest_probability_and_sorted_indices(prob_dist, tokenizer, input_string, labels):
+    """
+    Returns True if the input string has the highest probability among all provided labels,
+    and a list of indices and their probabilities of labels sorted by their probabilities from highest to lowest.
+
+    Parameters:
+    prob_dist: torch tensor of model logits (distribution over the vocabulary)
+    tokenizer: huggingface model tokenizer
+    input_string: the string to check if it has the highest probability
+    labels: list of strings to compare probabilities
+
+    Returns:
+    tuple:
+        bool: True if the input_string has the highest probability, False otherwise
+        list: list of [index, probability] sorted by probability in descending order
+    """
+    if not isinstance(prob_dist, torch.Tensor):
+        prob_dist = torch.tensor(prob_dist)
+    
+    # Compute the softmax to get probabilities
+    probabilities = torch.softmax(prob_dist, dim=-1)
+    
+    # Tokenize all labels and calculate their probabilities
+    label_indices = [tokenizer.encode(label, add_special_tokens=False) for label in labels]
+    label_probabilities = []
+
+    for indices in label_indices:
+        if len(indices) > 1:
+            # Sum probabilities for labels composed of multiple tokens
+            label_probability = sum(probabilities[0][index].item() for index in indices)
+        else:
+            # Single token labels
+            label_probability = probabilities[0][indices[0]].item()
+        label_probabilities.append((label_probability, indices))
+    
+    # Sort label probabilities in descending order
+    sorted_labels_by_prob = sorted(label_probabilities, key=lambda x: x[0], reverse=True)
+    sorted_indices_with_probs = [(labels[label_indices.index(indices)], prob) for prob, indices in sorted_labels_by_prob]
+    
+    # Find the label with the highest probability
+    max_probability, max_indices = sorted_labels_by_prob[0]
+    
+    # Get the indices of the input string
+    input_indices = tokenizer.encode(input_string, add_special_tokens=False)
+
+    # Check if input indices are equal to the indices of the label with the highest probability
+    is_highest = input_indices == max_indices
+
+    return is_highest, sorted_indices_with_probs
+
 
 def decode_to_vocab(prob_dist, tokenizer, k=5) -> list:
     """
