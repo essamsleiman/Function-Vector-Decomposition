@@ -17,3 +17,7 @@ Our main evaluation script is all contained in the `68610_final_notebook_fv.ipyn
 ## Data
 
 All the datasets used in our experiments can be found in the `dataset_files` folder.
+
+## Run
+
+Run `script.py` and modify argument swith `config/config.yaml`
