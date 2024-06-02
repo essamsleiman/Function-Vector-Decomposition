@@ -210,20 +210,84 @@ for n_top_heads in range(10,11):
 
             
     # Gender Bias Calculation
-    print("total_prob_gender_zero_shot_bias_male: ", avg(total_prob_gender_zero_shot_bias_male) * 100)
-    print("total_prob_gender_icl_bias_male: ", avg(total_prob_gender_icl_bias_male) * 100)
-    print("total_prob_gender_fv_bias_male: ", avg(total_prob_gender_fv_bias_male) * 100)
-    print("total_prob_icl_fv_bias_male: ", avg(total_prob_icl_fv_bias_male) * 100)
-    print("total_prob_gender_icl_fv_minus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_minus_fvunb_bias_male) * 100)
-    print("total_prob_gender_icl_fv_plus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_plus_fvunb_bias_male) * 100)
-    print("total_prob_gender_fv_unbias_male: ", avg(total_prob_gender_fv_unbias_male) * 100)
+    import matplotlib.pyplot as plt
+
+    # Gender Bias Calculation
+    import matplotlib.pyplot as plt
+
+    def plot_results(results_dict):
+        # labels = [label.replace("total_prob_", "") for label in results_dict.keys()]
+        labels = [label for label in results_dict.keys()]
+        values = list(results_dict.values())
+        # Plot the results
+        plt.bar(labels, values)
+        plt.xlabel("Bias Metric")
+        plt.ylabel("Average Probability (%)")
+        plt.title("Gender Bias Calculation")
+        plt.xticks(rotation=45)
+        plt.savefig("plots/gender_bias_calculation.png")  # Save the plot as an image
+        plt.close()  # Close the plot to free up memory
+
+    # Create a dictionary with the results
+    results_dict = {
+        "gender_zero_shot_bias_male": avg(total_prob_gender_zero_shot_bias_male) * 100,
+        "gender_icl_bias_male": avg(total_prob_gender_icl_bias_male) * 100,
+        "gender_fv_bias_male": avg(total_prob_gender_fv_bias_male) * 100,
+        "icl_fv_bias_male": avg(total_prob_icl_fv_bias_male) * 100,
+        "gender_icl_fv_minus_fvunb_bias_male": avg(total_prob_gender_icl_fv_minus_fvunb_bias_male) * 100,
+        "gender_icl_fv_plus_fvunb_bias_male": avg(total_prob_gender_icl_fv_plus_fvunb_bias_male) * 100,
+        "gender_fv_unbias_male": avg(total_prob_gender_fv_unbias_male) * 100
+    }
+    # Plot the results
+    plot_results(results_dict)
+
+    # print("total_prob_gender_zero_shot_bias_male: ", avg(total_prob_gender_zero_shot_bias_male) * 100)
+    # print("total_prob_gender_icl_bias_male: ", avg(total_prob_gender_icl_bias_male) * 100)
+    # print("total_prob_gender_fv_bias_male: ", avg(total_prob_gender_fv_bias_male) * 100)
+    # print("total_prob_icl_fv_bias_male: ", avg(total_prob_icl_fv_bias_male) * 100)
+    # print("total_prob_gender_icl_fv_minus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_minus_fvunb_bias_male) * 100)
+    # print("total_prob_gender_icl_fv_plus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_plus_fvunb_bias_male) * 100)
+    # print("total_prob_gender_fv_unbias_male: ", avg(total_prob_gender_fv_unbias_male) * 100)
     
     # Profession classification Performance
-    print("total_prob_gender_zero_shot_plus_fvunb_profession: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession) * 100)
-    print("total_prob_gender_fv_plus_fvunb_profession: ", avg(total_prob_gender_fv_plus_fvunb_profession) * 100)
-    print("total_prob_gender_zero_shot_plus_fvunb_profession_classify: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100)
-    print("total_prob_gender_fv_plus_fvunb_profession_classify: ", avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100)
     
-    print("total_prob_gender_zero_shot_plus_fvunb_profession_classify_all: ", total_prob_gender_zero_shot_plus_fvunb_profession_classify_all)
-    print("total_prob_gender_fv_plus_fvunb_profession_classify_all: ", total_prob_gender_fv_plus_fvunb_profession_classify_all)
+    def plot_profession_results(results_dict):
+        labels = [label for label in results_dict.keys()]
+        values = list(results_dict.values())
+        plt.bar(labels, values)
+        plt.xlabel("Profession")
+        plt.ylabel("Average Probability (%)")
+        plt.title("Profession Classification Performance")
+        plt.xticks(rotation=45)
+        plt.savefig("plots/profession_classification_performance.png")  # Save the plot as an image
+        plt.close()
+
+    plot_profession_results({
+        "zero_shot_plus_fvunb_profession": avg(total_prob_gender_zero_shot_plus_fvunb_profession) * 100,
+        "fv_plus_fvunb_profession": avg(total_prob_gender_fv_plus_fvunb_profession) * 100,
+        "zero_shot_plus_fvunb_profession_classify": avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100,
+        "fv_plus_fvunb_profession_classify": avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100
+    })
+    # print("total_prob_gender_zero_shot_plus_fvunb_profession: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession) * 100)
+    # print("total_prob_gender_fv_plus_fvunb_profession: ", avg(total_prob_gender_fv_plus_fvunb_profession) * 100)
+    # print("total_prob_gender_zero_shot_plus_fvunb_profession_classify: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100)
+    # print("total_prob_gender_fv_plus_fvunb_profession_classify: ", avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100)
+    
+    
+    def plot_classification_results(results_dict, name):
+        labels = [label for label in results_dict.keys()]
+        values = list(results_dict.values())
+        plt.bar(labels, values)
+        plt.xlabel("Profession")
+        plt.ylabel("Average Probability (%)")
+        plt.title("Profession Classification Performance")
+        plt.xticks(rotation=45)
+        plt.savefig("plots/profession_classification_performance_all{name}.png")  # Save the plot as an image
+        plt.close()
+        
+
+    plot_classification_results(total_prob_gender_zero_shot_plus_fvunb_profession_classify_all, "baseline")
+    plot_classification_results(total_prob_gender_fv_plus_fvunb_profession_classify_all, "fv")
+    # print("total_prob_gender_zero_shot_plus_fvunb_profession_classify_all: ", total_prob_gender_zero_shot_plus_fvunb_profession_classify_all)
+    # print("total_prob_gender_fv_plus_fvunb_profession_classify_all: ", total_prob_gender_fv_plus_fvunb_profession_classify_all)
     

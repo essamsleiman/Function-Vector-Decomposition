@@ -1,0 +1,10 @@
+model:
+  name: meta-llama/llama-2-7b-hf
+dataset:
+  fv_dataset: professor_teacher
+  fv_intervention_dataset:
+  - female_vector
+  - male_vector
+eval:
+  classification_dataset: profession_prediction_1
+  classification_labels: profession_prediction_1_labels
