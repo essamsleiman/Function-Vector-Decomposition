@@ -36,51 +36,44 @@ args = parser.parse_args()
 config = args.cfg
 config = OmegaConf.create(config)
 
-
+# import model
 model_name = config['model']['name']
 model, tokenizer, model_config = load_gpt_model_and_tokenizer(model_name)
 
 
-# Import the variable from the file
-if config['eval']['classification_labels']:
-    with open(f"./dataset_files/labels/{config['eval']['classification_labels']}.json", 'r') as f:
-        classification_labels = json.load(f)['labels']
-print("classification_labels: ", classification_labels)
-print("classification_labels: ", classification_labels)
 # Load Datasets
 fv_dataset_name = config['dataset']['fv_dataset']
 fv_dataset = load_dataset(fv_dataset_name, seed=0)
 fv_intervention_datasets_names = config['dataset']['fv_intervention_dataset']
-classification_dataset = config['eval']['classification_dataset']
+classification_dataset_name = config['eval']['classification_dataset']
 intervention_datasets = {}
 
+# Load all intervention datasets
 for dataset_name in fv_intervention_datasets_names:
     dataset = load_dataset(dataset_name, seed=0)
     intervention_datasets[dataset_name] = dataset
-    
-profession_dataset = load_dataset(classification_dataset, seed=0)
+
+# Load classification dataset
+classification_dataset = load_dataset(classification_dataset_name, seed=0)
 
 # Build Function Vectors from datasets
 FV, top_heads = compute_and_cache_FV(fv_dataset, model, model_config, tokenizer, cache_filename=f"FVs/FV_{fv_dataset_name}.pkl")
 
 FV_intervention_list = []
 top_heads_intervention_list = []
+
+# Build Function Vectors from intervention datasets
 for intervention_dataset in intervention_datasets:
     FV_intervention, top_heads_intervention = compute_and_cache_FV(intervention_datasets[intervention_dataset], model, model_config, tokenizer, cache_filename=f"FVs/FV_intervention_{intervention_dataset}.pkl")
     FV_intervention_list.append(FV_intervention)
     top_heads_intervention_list.append(top_heads_intervention)
     
-# FV_female, top_heads_female = compute_and_cache_FV(female_dataset, model, model_config, tokenizer, cache_filename='FVs/FV_female.pkl')
-# FV_male, top_heads_male = compute_and_cache_FV(male_dataset, model, model_config, tokenizer, cache_filename='FVs/FV_male.pkl')
+    
+# Import classification labels
+if config['eval']['classification_labels']:
+    with open(f"./dataset_files/labels/{config['eval']['classification_labels']}.json", 'r') as f:
+        classification_labels = json.load(f)['labels']
 
-# FV_profession, top_heads_profession = compute_and_cache_FV(profession_dataset, model, model_config, tokenizer, cache_filename=f"FVs/FV_classification{classification_dataset}.pkl")
-
-# FV_orthogonal = find_orthogonal_vector(FV_male, FV_female)
-
-
-# print("FV_orthogonal: ", FV_orthogonal)
-# FV  = torch.randn(FV.size()).to(FV_female.device)
-# FV = FV_random
 total_prob_gender_zero_shot_bias_male = []
 total_prob_gender_zero_shot_bias_female = []
 total_prob_gender_icl_bias_male = []
@@ -107,13 +100,13 @@ for n_top_heads in range(10,11):
 
     # Sample ICL example pairs, and a test word
     word_pairs = fv_dataset['train'][:10]
-    word_pairs_profession = profession_dataset['train'][:10]
+    word_pairs_profession = classification_dataset['train'][:10]
     
     for test_pair_idx in tqdm(range(15, 100)):
         
-        # test-set
+        # Test Pair
         test_pair = fv_dataset['test'][test_pair_idx]
-        test_profession = profession_dataset['test'][test_pair_idx]
+        test_profession = classification_dataset['test'][test_pair_idx]
         test_profession['output'] = str(test_profession['output'])
         
         # Prompts
@@ -208,7 +201,6 @@ for n_top_heads in range(10,11):
         # label_name = classification_labels[label]
         total_prob_gender_fv_plus_fvunb_profession_classify_all[label] = sum(probs) / len(probs)
         # total_prob_gender_fv_plus_fvunb_profession_classify_all_labels[label_name] = sum(probs) / len(probs)
-
             
             
 
@@ -220,13 +212,11 @@ def plot_results(results_dict, xlabel, ylabel, title, filename):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.xticks(rotation=45, ha='right')  # Rotate and align the labels to the right
-    plt.tight_layout()  # Ensure everything fits without overlap
-    plt.savefig(filename)  # Save the plot as an image
-    plt.close()  # Close the plot to free up memory
+    plt.xticks(rotation=45, ha='right') 
+    plt.tight_layout()  #
+    plt.savefig(filename) 
+    plt.close()  
 
-# Example usage:
-# Create a dictionary with the results
 results_dict_gender_bias = {
     "gender_zero_shot_bias_male": avg(total_prob_gender_zero_shot_bias_male) * 100,
     "gender_icl_bias_male": avg(total_prob_gender_icl_bias_male) * 100,
@@ -238,6 +228,9 @@ results_dict_gender_bias = {
 }
 
 # Plot the gender bias results
+
+# TODO: update these arguments so they're dynamic later
+
 plot_results(results_dict_gender_bias, "Bias Metric", "Average Probability (%)", "Gender Bias Calculation", "plots/gender_bias_calculation.png")
 
 # Create a dictionary with profession classification performance results
@@ -258,83 +251,4 @@ results_dict_classification_fv = total_prob_gender_fv_plus_fvunb_profession_clas
 # Plot the classification results
 plot_results(results_dict_classification_baseline, "Profession", "Average Probability (%)", "Profession Classification Performance - Baseline", "plots/profession_classification_performance_all_baseline.png")
 plot_results(results_dict_classification_fv, "Profession", "Average Probability (%)", "Profession Classification Performance - FV", "plots/profession_classification_performance_all_fv.png")
-    # # Gender Bias Calculation
-    # import matplotlib.pyplot as plt
-
-
-    # def plot_results(results_dict):
-    #     # labels = [label.replace("total_prob_", "") for label in results_dict.keys()]
-    #     labels = [label for label in results_dict.keys()]
-    #     values = list(results_dict.values())
-    #     # Plot the results
-    #     plt.bar(labels, values)
-    #     plt.xlabel("Bias Metric")
-    #     plt.ylabel("Average Probability (%)")
-    #     plt.title("Gender Bias Calculation")
-    #     plt.xticks(rotation=45)
-    #     plt.savefig("plots/gender_bias_calculation.png")  # Save the plot as an image
-    #     plt.close()  # Close the plot to free up memory
-
-    # # Create a dictionary with the results
-    # results_dict = {
-    #     "gender_zero_shot_bias_male": avg(total_prob_gender_zero_shot_bias_male) * 100,
-    #     "gender_icl_bias_male": avg(total_prob_gender_icl_bias_male) * 100,
-    #     "gender_fv_bias_male": avg(total_prob_gender_fv_bias_male) * 100,
-    #     "icl_fv_bias_male": avg(total_prob_icl_fv_bias_male) * 100,
-    #     "gender_icl_fv_minus_fvunb_bias_male": avg(total_prob_gender_icl_fv_minus_fvunb_bias_male) * 100,
-    #     "gender_icl_fv_plus_fvunb_bias_male": avg(total_prob_gender_icl_fv_plus_fvunb_bias_male) * 100,
-    #     "gender_fv_unbias_male": avg(total_prob_gender_fv_unbias_male) * 100
-    # }
-    # # Plot the results
-    # plot_results(results_dict)
-
-    # # print("total_prob_gender_zero_shot_bias_male: ", avg(total_prob_gender_zero_shot_bias_male) * 100)
-    # # print("total_prob_gender_icl_bias_male: ", avg(total_prob_gender_icl_bias_male) * 100)
-    # # print("total_prob_gender_fv_bias_male: ", avg(total_prob_gender_fv_bias_male) * 100)
-    # # print("total_prob_icl_fv_bias_male: ", avg(total_prob_icl_fv_bias_male) * 100)
-    # # print("total_prob_gender_icl_fv_minus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_minus_fvunb_bias_male) * 100)
-    # # print("total_prob_gender_icl_fv_plus_fvunb_bias_male: ", avg(total_prob_gender_icl_fv_plus_fvunb_bias_male) * 100)
-    # # print("total_prob_gender_fv_unbias_male: ", avg(total_prob_gender_fv_unbias_male) * 100)
-    
-    # # Profession classification Performance
-    
-    # def plot_profession_results(results_dict):
-    #     labels = [label for label in results_dict.keys()]
-    #     values = list(results_dict.values())
-    #     plt.bar(labels, values)
-    #     plt.xlabel("Profession")
-    #     plt.ylabel("Average Probability (%)")
-    #     plt.title("Profession Classification Performance")
-    #     plt.xticks(rotation=45)
-    #     plt.savefig("plots/profession_classification_performance.png")  # Save the plot as an image
-    #     plt.close()
-
-    # plot_profession_results({
-    #     "zero_shot_plus_fvunb_profession": avg(total_prob_gender_zero_shot_plus_fvunb_profession) * 100,
-    #     "fv_plus_fvunb_profession": avg(total_prob_gender_fv_plus_fvunb_profession) * 100,
-    #     "zero_shot_plus_fvunb_profession_classify": avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100,
-    #     "fv_plus_fvunb_profession_classify": avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100
-    # })
-    # # print("total_prob_gender_zero_shot_plus_fvunb_profession: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession) * 100)
-    # # print("total_prob_gender_fv_plus_fvunb_profession: ", avg(total_prob_gender_fv_plus_fvunb_profession) * 100)
-    # # print("total_prob_gender_zero_shot_plus_fvunb_profession_classify: ", avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100)
-    # # print("total_prob_gender_fv_plus_fvunb_profession_classify: ", avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100)
-    
-    
-    # def plot_classification_results(results_dict, name):
-    #     labels = [label for label in results_dict.keys()]
-    #     values = list(results_dict.values())
-    #     plt.bar(labels, values)
-    #     plt.xlabel("Profession")
-    #     plt.ylabel("Average Probability (%)")
-    #     plt.title("Profession Classification Performance")
-    #     plt.xticks(rotation=45)
-    #     plt.savefig("plots/profession_classification_performance_all{name}.png")  # Save the plot as an image
-    #     plt.close()
-        
-
-    # plot_classification_results(total_prob_gender_zero_shot_plus_fvunb_profession_classify_all, "baseline")
-    # plot_classification_results(total_prob_gender_fv_plus_fvunb_profession_classify_all, "fv")
-    # print("total_prob_gender_zero_shot_plus_fvunb_profession_classify_all: ", total_prob_gender_zero_shot_plus_fvunb_profession_classify_all)
-    # print("total_prob_gender_fv_plus_fvunb_profession_classify_all: ", total_prob_gender_fv_plus_fvunb_profession_classify_all)
-    
+  
