@@ -240,7 +240,7 @@ results_dict_profession = {
     "zero_shot_plus_fvunb_profession_classify": avg(total_prob_gender_zero_shot_plus_fvunb_profession_classify) * 100,
     "fv_plus_fvunb_profession_classify": avg(total_prob_gender_fv_plus_fvunb_profession_classify) * 100
 }
-d
+
 # Plot the profession classification performance results
 plot_results(results_dict_profession, "Profession", "Average Probability (%)", "Profession Classification Performance", "plots/profession_classification_performance.png")
 
